@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import FilePreview from './components/FilePreview';
 import Chatbot from './components/Chatbot';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Message } from "./types/index";
+import Groq from 'groq-sdk';
 
 function App() {
   // ========== STATE MANAGEMENT ==========
@@ -13,20 +13,17 @@ function App() {
   const [input, setInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  // ========== GEMINI API SETUP ==========
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-  // const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-  // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-2.0-flash"    // ✅ Or this
-});
+  // ========== GROQ API SETUP ========== ✅ UPDATED
+  const groq = new Groq({ 
+    apiKey: import.meta.env.VITE_GROQ_API_KEY,
+    dangerouslyAllowBrowser: true
+  });
 
   // ========== FILE UPLOAD HANDLER ==========
   const handleFileUpload = (uploadedFile: File, content: string) => {
     setFile(uploadedFile);
     setFileContent(content);
     
-    // Welcome message when file is uploaded
     setMessages([
       {
         role: 'assistant',
@@ -37,11 +34,10 @@ const model = genAI.getGenerativeModel({
     setInput('');
   };
 
-  // ========== SEND MESSAGE HANDLER ==========
+  // ========== SEND MESSAGE HANDLER ========== ✅ UPDATED
   const handleSendMessage = async () => {
     if (!input.trim() || !fileContent || loading) return;
 
-    // Add user message to chat
     const userMessage: Message = {
       role: 'user',
       content: input,
@@ -53,10 +49,16 @@ const model = genAI.getGenerativeModel({
     setLoading(true);
 
     try {
-      // ========== PREPARE PROMPT FOR GEMINI ==========
-      const prompt = `You are an AI assistant analyzing a file. Provide helpful, accurate, and detailed answers based on the file content.
-
-**File Information:**
+      // ========== CALL GROQ API ========== ✅ UPDATED
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: "You are an AI assistant analyzing a file. Provide helpful, accurate, and detailed answers based on the file content."
+          },
+          {
+            role: "user",
+            content: `**File Information:**
 - File Name: ${file?.name}
 - File Size: ${file ? (file.size / 1024).toFixed(2) : '0'} KB
 - Total Lines: ${fileContent.split('\n').length}
@@ -73,15 +75,16 @@ ${input}
 - Answer based ONLY on the file content provided above
 - Be specific and cite relevant parts of the file
 - If the answer is not in the file, clearly state that
-- Format your response in a clear and readable way
-- Use bullet points or numbered lists when appropriate`;
+- Format your response in a clear and readable way`
+          }
+        ],
+       model: "llama-3.1-8b-instant",
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
 
-      // ========== CALL GEMINI API ==========
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const aiText = response.text();
+      const aiText = chatCompletion.choices[0]?.message?.content || "No response received";
 
-      // Add AI response to chat
       const aiMessage: Message = {
         role: 'assistant',
         content: aiText,
@@ -91,12 +94,11 @@ ${input}
       setMessages(prev => [...prev, aiMessage]);
 
     } catch (error: any) {
-      console.error('Gemini API Error:', error);
+      console.error('Groq API Error:', error);
       
-      // Error message
       const errorMessage: Message = {
         role: 'assistant',
-        content: `❌ **Error:** Unable to process your request.\n\n**Details:** ${error.message || 'Unknown error occurred'}\n\nPlease try again or check your API key.`,
+        content: `❌ **Error:** Unable to process your request.\n\n**Details:** ${error.message || 'Unknown error occurred'}\n\nPlease check your Groq API key in .env file.`,
         timestamp: new Date()
       };
       
@@ -118,7 +120,6 @@ ${input}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* ========== HEADER ========== */}
       <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-xl">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
@@ -128,14 +129,14 @@ ${input}
               </svg>
               <div>
                 <h1 className="text-3xl font-bold">AI File Analyzer</h1>
-                <p className="text-sm text-gray-100 mt-1">Powered by Google Gemini AI</p>
+                <p className="text-sm text-gray-100 mt-1">Powered by Groq AI ⚡</p>
               </div>
             </div>
             
             {file && (
               <button
                 onClick={handleClear}
-                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm"
+                className="cursor-pointer bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -147,13 +148,10 @@ ${input}
         </div>
       </header>
 
-      {/* ========== MAIN CONTENT ========== */}
       <main className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-180px)]">
           
-          {/* ========== LEFT DIV: FILE UPLOAD & PREVIEW ========== */}
           <div className="flex flex-col gap-4">
-            {/* File Upload Section */}
             <div className="bg-white rounded-lg p-6 shadow-lg">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,23 +162,21 @@ ${input}
               <FileUpload onFileUpload={handleFileUpload} currentFile={file} />
             </div>
 
-            {/* File Preview Section */}
             <div className="flex-1 min-h-0">
               <FilePreview content={fileContent} fileName={file?.name || ''} />
             </div>
           </div>
 
-          {/* ========== RIGHT DIV: CHATBOT ========== */}
-          <div className="flex flex-col">
-            <Chatbot
-              messages={messages}
-              input={input}
-              setInput={setInput}
-              onSend={handleSendMessage}
-              loading={loading}
-              disabled={!fileContent}
-            />
-          </div>
+          <div className="flex flex-col h-full">
+  <Chatbot
+    messages={messages}
+    input={input}
+    setInput={setInput}
+    onSend={handleSendMessage}
+    loading={loading}
+    disabled={!fileContent}
+  />
+</div>
 
         </div>
       </main>
