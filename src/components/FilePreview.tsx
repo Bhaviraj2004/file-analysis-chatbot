@@ -3,13 +3,12 @@ import React from 'react';
 
 interface FilePreviewProps {
   content: string;
-  fileName: string;
 }
 
 const FilePreview: React.FC<FilePreviewProps> = ({ content }) => {
   if (!content) {
     return (
-      <div className="bg-white rounded-lg p-8 shadow-md h-full flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow-md h-full flex items-center justify-center">
         <div className="text-center text-gray-400">
           <svg className="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -25,7 +24,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ content }) => {
   const previewLines = lines.slice(0, 500); // First 500 lines
 
   return (
-    <div className="bg-white rounded-lg shadow-md h-full flex flex-col">
+    <div className="bg-white rounded-lg shadow-md h-full flex flex-col overflow-hidden">
       <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white px-4 py-3 rounded-t-lg">
         <h3 className="font-semibold flex items-center gap-2">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +38,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({ content }) => {
         </p>
       </div>
       
-      <div className="flex-1 overflow-auto p-4">
+      {/* Content area with internal scroll */}
+      <div className="flex-1 overflow-y-auto p-4">
         <pre className="text-sm text-gray-700 font-mono whitespace-pre-wrap break-words">
           {previewLines.join('\n')}
         </pre>

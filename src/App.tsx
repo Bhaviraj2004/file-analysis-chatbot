@@ -4,6 +4,7 @@ import FilePreview from './components/FilePreview';
 import Chatbot from './components/Chatbot';
 import type { Message } from "./types/index";
 import Groq from 'groq-sdk';
+import Swal from 'sweetalert2';
 
 function App() {
   // ========== STATE MANAGEMENT ==========
@@ -13,7 +14,7 @@ function App() {
   const [input, setInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  // ========== GROQ API SETUP ========== ✅ UPDATED
+  // ========== GROQ API SETUP ==========
   const groq = new Groq({ 
     apiKey: import.meta.env.VITE_GROQ_API_KEY,
     dangerouslyAllowBrowser: true
@@ -34,7 +35,7 @@ function App() {
     setInput('');
   };
 
-  // ========== SEND MESSAGE HANDLER ========== ✅ UPDATED
+  // ========== SEND MESSAGE HANDLER ==========
   const handleSendMessage = async () => {
     if (!input.trim() || !fileContent || loading) return;
 
@@ -49,7 +50,6 @@ function App() {
     setLoading(true);
 
     try {
-      // ========== CALL GROQ API ========== ✅ UPDATED
       const chatCompletion = await groq.chat.completions.create({
         messages: [
           {
@@ -78,7 +78,7 @@ ${input}
 - Format your response in a clear and readable way`
           }
         ],
-       model: "llama-3.1-8b-instant",
+        model: "llama-3.1-8b-instant",
         temperature: 0.7,
         max_tokens: 1000,
       });
@@ -109,20 +109,53 @@ ${input}
   };
 
   // ========== CLEAR/RESET HANDLER ==========
-  const handleClear = () => {
-    if (window.confirm('Are you sure you want to clear everything? This will remove the uploaded file and chat history.')) {
+  const handleClear = async () => {
+    const result = await Swal.fire({
+      title: '🗑️ Clear Everything?',
+      html: '<p style="color: #666;">This will remove:</p><ul style="text-align: left; color: #666; margin-top: 10px;"><li>📄 Uploaded file</li><li>💬 Chat history</li><li>✏️ Current input</li></ul>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Clear All!',
+      cancelButtonText: 'Cancel',
+      background: '#fff',
+      backdrop: 'rgba(0,0,0,0.4)',
+      customClass: {
+        popup: 'rounded-xl shadow-2xl',
+        title: 'text-2xl font-bold',
+        confirmButton: 'px-6 py-2 rounded-lg font-semibold',
+        cancelButton: 'px-6 py-2 rounded-lg font-semibold'
+      }
+    });
+
+    if (result.isConfirmed) {
       setFile(null);
       setFileContent('');
       setMessages([]);
       setInput('');
+      
+      Swal.fire({
+        title: 'Cleared!',
+        text: 'All data has been removed successfully.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#fff',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl'
+        }
+      });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-xl">
+    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* ========== HEADER ========== */}
+      <header className="flex-shrink-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-xl">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
+            {/* Logo & Title */}
             <div className="flex items-center gap-3">
               <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -133,51 +166,50 @@ ${input}
               </div>
             </div>
             
-            {file && (
-              <button
-                onClick={handleClear}
-                className="cursor-pointer bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Clear All
-              </button>
-            )}
+            {/* Upload & Clear Buttons */}
+            <div className="flex items-center gap-3">
+              {file && (
+                <button
+                  onClick={handleClear}
+                  className="cursor-pointer bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 backdrop-blur-sm"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Clear All
+                </button>
+              )}
+              
+              {/* Upload Button in Header */}
+              <FileUpload onFileUpload={handleFileUpload} currentFile={file} />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-180px)]">
-          
-          <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-lg p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Upload File
-              </h2>
-              <FileUpload onFileUpload={handleFileUpload} currentFile={file} />
+      {/* ========== MAIN CONTENT ========== */}
+      <main className="flex-1 overflow-hidden">
+        <div className="container mx-auto px-4 py-6 h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+            
+            {/* ========== LEFT: FILE PREVIEW (Internal Scroll) ========== */}
+            <div className="h-full overflow-hidden">
+              <FilePreview content={fileContent} />
             </div>
 
-            <div className="flex-1 min-h-0">
-              <FilePreview content={fileContent} fileName={file?.name || ''} />
+            {/* ========== RIGHT: CHATBOT (Internal Scroll) ========== */}
+            <div className="h-full overflow-hidden">
+              <Chatbot
+                messages={messages}
+                input={input}
+                setInput={setInput}
+                onSend={handleSendMessage}
+                loading={loading}
+                disabled={!fileContent}
+              />
             </div>
+
           </div>
-
-          <div className="flex flex-col h-full">
-  <Chatbot
-    messages={messages}
-    input={input}
-    setInput={setInput}
-    onSend={handleSendMessage}
-    loading={loading}
-    disabled={!fileContent}
-  />
-</div>
-
         </div>
       </main>
     </div>

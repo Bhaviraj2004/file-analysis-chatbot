@@ -1,9 +1,6 @@
 import React, { useRef } from 'react';
-// @ts-ignore
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
-// @ts-ignore
 import mammoth from 'mammoth';
-// @ts-ignore
 import Tesseract from 'tesseract.js';
 
 // PDF.js worker setup
@@ -179,7 +176,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, currentFile }) =>
         accept=".txt,.json,.csv,.md,.xml,.log,.pdf,.doc,.docx,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.bmp,.tiff"
         className="hidden"
       />
-      
+      <div >
       <button
         onClick={handleButtonClick}
         className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
@@ -190,7 +187,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, currentFile }) =>
         {currentFile ? 'Change File' : 'Upload File'}
       </button>
 
-      {currentFile && (
+      {/* {currentFile && (
         <div className="bg-white rounded-lg p-4 shadow-md">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded">
@@ -206,7 +203,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, currentFile }) =>
             </div>
           </div>
         </div>
-      )}
+      )} */}
+    </div>
     </div>
   );
 };
