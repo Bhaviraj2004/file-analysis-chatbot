@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 import Tesseract from 'tesseract.js';
 
-// PDF.js worker setup
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 interface FileUploadProps {
@@ -47,14 +47,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, currentFile }) =>
     }
   };
 
-  // ========== IMAGE OCR TEXT EXTRACTION ========== ✨ NEW
+  // ========== IMAGE OCR TEXT EXTRACTION ==========
   const extractImageText = async (file: File): Promise<string> => {
     try {
       const result = await Tesseract.recognize(
         file,
         'eng', // Language: 'eng' for English, 'hin' for Hindi, 'eng+hin' for both
         {
-          logger: (m) => {
+          logger: (m: any) => {
             if (m.status === 'recognizing text') {
               console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
             }
@@ -176,35 +176,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, currentFile }) =>
         accept=".txt,.json,.csv,.md,.xml,.log,.pdf,.doc,.docx,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.bmp,.tiff"
         className="hidden"
       />
-      <div >
-      <button
-        onClick={handleButtonClick}
-        className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        {currentFile ? 'Change File' : 'Upload File'}
-      </button>
-
-      {/* {currentFile && (
-        <div className="bg-white rounded-lg p-4 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 p-2 rounded">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800 truncate">{currentFile.name}</p>
-              <p className="text-sm text-gray-500">
-                {(currentFile.size / 1024).toFixed(2)} KB • {currentFile.type || 'text file'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )} */}
-    </div>
+      <div>
+        <button
+          onClick={handleButtonClick}
+          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          {currentFile ? 'Change File' : 'Upload File'}
+        </button>
+      </div>
     </div>
   );
 };
