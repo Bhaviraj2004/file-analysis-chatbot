@@ -162,7 +162,7 @@ ${input}
               </svg>
               <div>
                 <h1 className="text-3xl font-bold">AI File Analyzer</h1>
-                <p className="text-sm text-gray-100 mt-1">Powered by Groq AI ⚡</p>
+                <p className="text-sm text-gray-100 mt-1">Powered by AI ⚡</p>
               </div>
             </div>
             
