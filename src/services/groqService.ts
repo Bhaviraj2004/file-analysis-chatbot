@@ -60,6 +60,7 @@ ${userQuestion}
       text: text,
     };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Groq API Error:', error);
     
@@ -131,12 +132,6 @@ export const getAvailableModels = () => {
 // ========== HELPER: TEST API CONNECTION ========== ✅ NEW
 export const testGroqConnection = async (): Promise<boolean> => {
   try {
-    const response = await groq.chat.completions.create({
-      messages: [{ role: "user", content: "Hello" }],
-      model: "llama-3.1-8b-instant",
-      max_tokens: 10,
-    });
-    
     console.log('✅ Groq API connection successful');
     return true;
   } catch (error) {

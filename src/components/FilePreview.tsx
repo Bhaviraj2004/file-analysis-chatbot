@@ -6,7 +6,7 @@ interface FilePreviewProps {
   fileName: string;
 }
 
-const FilePreview: React.FC<FilePreviewProps> = ({ content, fileName }) => {
+const FilePreview: React.FC<FilePreviewProps> = ({ content }) => {
   if (!content) {
     return (
       <div className="bg-white rounded-lg p-8 shadow-md h-full flex items-center justify-center">
